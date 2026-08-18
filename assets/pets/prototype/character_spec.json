@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "status": "prototype-placeholder",
+  "proportions": "2.7-head chibi",
+  "palette": {
+    "hair": "#27324A",
+    "eyes": "#4E78F0",
+    "outfit": "#6878E8",
+    "accent": "#72E2D1"
+  },
+  "working_prop": "floating_terminal",
+  "locked_traits": ["short dark-blue hair", "blue eyes", "indigo hoodie"]
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "pet_id": "prototype-orbit",
+  "name": "小轨",
+  "canvas": [512, 512],
+  "display_size": [280, 280],
+  "anchor": [256, 492],
+  "hitbox": [76, 42, 360, 450],
+  "default_facing": "right",
+  "animations": {
+    "idle": {
+      "loop": true,
+      "interruptible_frames": [0],
+      "frames": [{"file": "idle/idle.svg", "duration_ms": 1000}]
+    },
+    "hover": {
+      "loop": true,
+      "interruptible_frames": [0],
+      "frames": [{"file": "hover/hover.svg", "duration_ms": 800}]
+    },
+    "loading": {
+      "loop": true,
+      "interruptible_frames": [0],
+      "frames": [{"file": "loading/loading.svg", "duration_ms": 800}]
+    },
+    "working": {
+      "loop": true,
+      "interruptible_frames": [0],
+      "frames": [{"file": "working/working.svg", "duration_ms": 700}]
+    }
+  }
+}
