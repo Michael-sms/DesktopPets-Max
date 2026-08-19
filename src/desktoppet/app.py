@@ -1,4 +1,4 @@
-"""PySide6 desktop window for the M1 prototype."""
+"""PySide6 desktop window and command-line entry point."""
 
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ STATE_LABELS = {
     PetState.LOADING: "加载中",
     PetState.WORKING: "工作中",
 }
+RENDER_INTERVAL_MS = 50
 
 
 class PetWindow(QWidget):
@@ -35,6 +36,7 @@ class PetWindow(QWidget):
         self.machine.subscribe(self._on_state_changed)
         self._pixmaps = self._load_pixmaps()
         self._frame_index = 0
+        self._frame_elapsed_ms = 0
         self._phase = 0.0
         self._drag_origin: QPoint | None = None
         self._hover_token = 0
@@ -82,20 +84,22 @@ class PetWindow(QWidget):
         self.move(area.right() - self.width() - 24, area.bottom() - self.height() - 24)
 
     def _schedule_frame(self) -> None:
-        animation = self.manifest.animation_for(self.machine.state)
-        duration = animation.frames[self._frame_index].duration_ms
-        self._animation_timer.start(min(duration, 80))
+        self._animation_timer.start(RENDER_INTERVAL_MS)
 
     def _tick(self) -> None:
-        self._phase = (self._phase + 0.22) % (math.tau)
+        self._phase = (self._phase + 0.14) % (math.tau)
         animation = self.manifest.animation_for(self.machine.state)
-        if len(animation.frames) > 1:
+        self._frame_elapsed_ms += self._animation_timer.interval()
+        duration = animation.frames[self._frame_index].duration_ms
+        if len(animation.frames) > 1 and self._frame_elapsed_ms >= duration:
             self._frame_index = (self._frame_index + 1) % len(animation.frames)
+            self._frame_elapsed_ms = 0
         self.update()
 
     def _on_state_changed(self, previous: PetState, current: PetState) -> None:
         del previous
         self._frame_index = 0
+        self._frame_elapsed_ms = 0
         self._phase = 0.0
         self._schedule_frame()
         self.update()
@@ -118,14 +122,16 @@ class PetWindow(QWidget):
         pixmap = self._pixmaps[self.machine.state][self._frame_index]
         image_rect = QRectF(8, 8, self.width() - 16, self.height() - 16)
         state = self.machine.state
-        if state is PetState.IDLE:
-            image_rect.adjust(1, 2 + math.sin(self._phase) * 1.5, -1, -2)
-        elif state is PetState.HOVER:
-            image_rect.translate(0, -3 + math.sin(self._phase) * 1.5)
-        elif state is PetState.LOADING:
-            image_rect.translate(math.sin(self._phase) * 2, 0)
-        elif state is PetState.WORKING:
-            image_rect.translate(math.sin(self._phase * 2) * 1.2, 0)
+        animation = self.manifest.animation_for(state)
+        if len(animation.frames) == 1:
+            if state is PetState.IDLE:
+                image_rect.adjust(1, 2 + math.sin(self._phase) * 1.5, -1, -2)
+            elif state is PetState.HOVER:
+                image_rect.translate(0, -3 + math.sin(self._phase) * 1.5)
+            elif state is PetState.LOADING:
+                image_rect.translate(math.sin(self._phase) * 2, 0)
+            elif state is PetState.WORKING:
+                image_rect.translate(math.sin(self._phase * 2) * 1.2, 0)
         painter.drawPixmap(image_rect.toRect(), pixmap)
 
         label = STATE_LABELS[state]
@@ -198,18 +204,38 @@ class PetWindow(QWidget):
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Desktop pet M1 prototype")
+    parser = argparse.ArgumentParser(description="Desktop pet prototype")
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--demo", action="store_true", help="cycle through all states")
     parser.add_argument("--validate", action="store_true", help="validate assets and exit")
     parser.add_argument(
         "--smoke-test", action="store_true", help="open offscreen and exit automatically"
     )
+    parser.add_argument("--create", action="store_true", help="open the M2 creation UI")
+    parser.add_argument(
+        "--create-demo", action="store_true", help="open creation UI with bundled sample"
+    )
+    parser.add_argument(
+        "--smoke-create", action="store_true", help="open creation UI offscreen and exit"
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.smoke_test or args.smoke_create:
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+    if args.create or args.create_demo or args.smoke_create:
+        from .creator_ui import CreationWindow
+
+        app = QApplication.instance() or QApplication(sys.argv[:1])
+        window = CreationWindow(demo=args.create_demo)
+        window.show()
+        if args.smoke_create:
+            QTimer.singleShot(350, app.quit)
+        return app.exec()
+
     try:
         manifest = load_manifest(args.manifest)
     except ManifestError as exc:
@@ -223,8 +249,6 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
-    if args.smoke_test:
-        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     app = QApplication.instance() or QApplication(sys.argv[:1])
     window = PetWindow(manifest, demo=args.demo)
     window.show()

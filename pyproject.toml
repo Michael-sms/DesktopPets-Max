@@ -5,8 +5,12 @@ description = "A state-aware, customizable desktop pet prototype"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "Pillow>=11.0",
     "PySide6>=6.8",
 ]
+
+[project.optional-dependencies]
+ai = ["openai>=2.0"]
 
 [project.scripts]
 desktop-pet = "desktoppet.app:main"
