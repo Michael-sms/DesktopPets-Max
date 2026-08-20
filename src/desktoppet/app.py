@@ -17,7 +17,7 @@ from .state_machine import PetEvent, PetState, PetStateMachine
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MANIFEST = PROJECT_ROOT / "assets" / "pets" / "prototype" / "manifest.json"
+DEFAULT_MANIFEST = PROJECT_ROOT / "assets" / "pets" / "m3_sample" / "manifest.json"
 
 STATE_LABELS = {
     PetState.IDLE: "静置",
@@ -25,7 +25,7 @@ STATE_LABELS = {
     PetState.LOADING: "加载中",
     PetState.WORKING: "工作中",
 }
-RENDER_INTERVAL_MS = 50
+RENDER_INTERVAL_MS = 20
 
 
 class PetWindow(QWidget):
@@ -35,6 +35,8 @@ class PetWindow(QWidget):
         self.machine = PetStateMachine()
         self.machine.subscribe(self._on_state_changed)
         self._pixmaps = self._load_pixmaps()
+        self._active_animation_name = PetState.IDLE.value
+        self._transition_target: PetState | None = None
         self._frame_index = 0
         self._frame_elapsed_ms = 0
         self._phase = 0.0
@@ -58,22 +60,32 @@ class PetWindow(QWidget):
 
         if demo:
             self._demo_states = iter(
-                [PetState.HOVER, PetState.LOADING, PetState.WORKING, PetState.IDLE]
+                [
+                    PetState.HOVER,
+                    PetState.IDLE,
+                    PetState.LOADING,
+                    PetState.WORKING,
+                    PetState.IDLE,
+                ]
             )
             self._demo_timer = QTimer(self)
             self._demo_timer.timeout.connect(self._advance_demo)
             self._demo_timer.start(1800)
 
-    def _load_pixmaps(self) -> dict[PetState, tuple[QPixmap, ...]]:
-        result: dict[PetState, tuple[QPixmap, ...]] = {}
-        for state in PetState:
+    @property
+    def active_animation_name(self) -> str:
+        return self._active_animation_name
+
+    def _load_pixmaps(self) -> dict[str, tuple[QPixmap, ...]]:
+        result: dict[str, tuple[QPixmap, ...]] = {}
+        for name, animation in self.manifest.animations.items():
             frames: list[QPixmap] = []
-            for frame in self.manifest.animation_for(state).frames:
+            for frame in animation.frames:
                 pixmap = QPixmap(str(frame.file))
                 if pixmap.isNull():
                     raise ManifestError(f"cannot render frame: {frame.file}")
                 frames.append(pixmap)
-            result[state] = tuple(frames)
+            result[name] = tuple(frames)
         return result
 
     def _move_to_bottom_right(self) -> None:
@@ -87,29 +99,53 @@ class PetWindow(QWidget):
         self._animation_timer.start(RENDER_INTERVAL_MS)
 
     def _tick(self) -> None:
-        self._phase = (self._phase + 0.14) % (math.tau)
-        animation = self.manifest.animation_for(self.machine.state)
+        self._phase = (self._phase + 0.056) % (math.tau)
+        animation = self.manifest.animations[self._active_animation_name]
         self._frame_elapsed_ms += self._animation_timer.interval()
         duration = animation.frames[self._frame_index].duration_ms
-        if len(animation.frames) > 1 and self._frame_elapsed_ms >= duration:
-            self._frame_index = (self._frame_index + 1) % len(animation.frames)
+        if self._frame_elapsed_ms >= duration:
             self._frame_elapsed_ms = 0
+            if self._frame_index + 1 < len(animation.frames):
+                self._frame_index += 1
+            elif animation.loop:
+                self._frame_index = 0
+            else:
+                self._finish_transition()
         self.update()
 
     def _on_state_changed(self, previous: PetState, current: PetState) -> None:
-        del previous
+        transition = f"{previous.value}_to_{current.value}"
+        if transition in self.manifest.animations:
+            self._active_animation_name = transition
+            self._transition_target = current
+        else:
+            self._active_animation_name = current.value
+            self._transition_target = None
         self._frame_index = 0
         self._frame_elapsed_ms = 0
         self._phase = 0.0
         self._schedule_frame()
         self.update()
 
+    def _finish_transition(self) -> None:
+        target = self._transition_target or self.machine.state
+        self._active_animation_name = target.value
+        self._transition_target = None
+        self._frame_index = 0
+        self._frame_elapsed_ms = 0
+
     def _advance_demo(self) -> None:
         try:
             state = next(self._demo_states)
         except StopIteration:
             self._demo_states = iter(
-                [PetState.HOVER, PetState.LOADING, PetState.WORKING, PetState.IDLE]
+                [
+                    PetState.HOVER,
+                    PetState.IDLE,
+                    PetState.LOADING,
+                    PetState.WORKING,
+                    PetState.IDLE,
+                ]
             )
             state = next(self._demo_states)
         self.machine.force(state)
@@ -119,11 +155,11 @@ class PetWindow(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        pixmap = self._pixmaps[self.machine.state][self._frame_index]
+        pixmap = self._pixmaps[self._active_animation_name][self._frame_index]
         image_rect = QRectF(8, 8, self.width() - 16, self.height() - 16)
         state = self.machine.state
-        animation = self.manifest.animation_for(state)
-        if len(animation.frames) == 1:
+        animation = self.manifest.animations[self._active_animation_name]
+        if self._active_animation_name == state.value and len(animation.frames) == 1:
             if state is PetState.IDLE:
                 image_rect.adjust(1, 2 + math.sin(self._phase) * 1.5, -1, -2)
             elif state is PetState.HOVER:
@@ -156,7 +192,13 @@ class PetWindow(QWidget):
     def leaveEvent(self, event: object) -> None:
         del event
         self._hover_token += 1
-        QTimer.singleShot(200, lambda: self.machine.dispatch(PetEvent.HOVER_LEAVE))
+        token = self._hover_token
+
+        def deactivate_hover() -> None:
+            if token == self._hover_token and not self.underMouse():
+                self.machine.dispatch(PetEvent.HOVER_LEAVE)
+
+        QTimer.singleShot(200, deactivate_hover)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() is Qt.MouseButton.LeftButton:

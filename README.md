@@ -1,6 +1,6 @@
 # DesktopPet
 
-一个基于 PySide6 的透明桌面宠物原型。当前完成 M1“规范与原型”以及 M2“单角色闭环”：支持照片校验、角色规格草稿、候选确认、关键姿势表和 Idle 动画资源打包。
+一个基于 PySide6 的透明桌面宠物原型。当前已完成 M1“规范与原型”、M2“单角色闭环”和 M3“完整动作集”：支持照片制作流程，以及 Idle、Hover、Loading、Working 和五段状态过渡动画。
 
 ## 运行
 
@@ -16,6 +16,8 @@ uv run python main.py
 - 右键打开状态调试菜单或退出。
 - 按住角色左键拖动。
 - 使用 `uv run python main.py --demo` 自动轮播四状态。
+
+M3 默认角色会按 `Idle → Hover → Idle → Loading → Working → Idle` 轮播，以展示全部五段标准过渡。详细审阅步骤见 [docs/m3_review.md](docs/m3_review.md)。
 
 ## M2 角色制作审阅
 

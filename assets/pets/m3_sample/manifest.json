@@ -1,0 +1,430 @@
+{
+  "schema_version": 1,
+  "pet_id": "m3-xiaogui",
+  "name": "小轨 M3",
+  "canvas": [
+    512,
+    512
+  ],
+  "display_size": [
+    280,
+    280
+  ],
+  "anchor": [
+    256,
+    492
+  ],
+  "hitbox": [
+    46,
+    24,
+    420,
+    468
+  ],
+  "default_facing": "right",
+  "animations": {
+    "idle": {
+      "loop": true,
+      "interruptible_frames": [
+        0,
+        6
+      ],
+      "frames": [
+        {
+          "file": "idle/000.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/001.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/002.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/003.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/004.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/005.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/006.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/007.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/008.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/009.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/010.webp",
+          "duration_ms": 200
+        },
+        {
+          "file": "idle/011.webp",
+          "duration_ms": 200
+        }
+      ]
+    },
+    "hover": {
+      "loop": true,
+      "interruptible_frames": [
+        0,
+        6
+      ],
+      "frames": [
+        {
+          "file": "hover/000.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/001.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/002.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/003.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/004.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/005.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/006.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/007.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/008.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/009.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/010.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "hover/011.webp",
+          "duration_ms": 100
+        }
+      ]
+    },
+    "loading": {
+      "loop": true,
+      "interruptible_frames": [
+        0,
+        8
+      ],
+      "frames": [
+        {
+          "file": "loading/000.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/001.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/002.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/003.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/004.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/005.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/006.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/007.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/008.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/009.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/010.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/011.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/012.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/013.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/014.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "loading/015.webp",
+          "duration_ms": 100
+        }
+      ]
+    },
+    "working": {
+      "loop": true,
+      "interruptible_frames": [
+        0,
+        6
+      ],
+      "frames": [
+        {
+          "file": "working/000.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/001.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/002.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/003.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/004.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/005.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/006.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/007.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/008.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/009.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/010.webp",
+          "duration_ms": 100
+        },
+        {
+          "file": "working/011.webp",
+          "duration_ms": 100
+        }
+      ]
+    },
+    "idle_to_hover": {
+      "loop": false,
+      "interruptible_frames": [
+        5
+      ],
+      "frames": [
+        {
+          "file": "transitions/idle_to_hover/000.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_hover/001.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_hover/002.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_hover/003.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_hover/004.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_hover/005.webp",
+          "duration_ms": 60
+        }
+      ]
+    },
+    "hover_to_idle": {
+      "loop": false,
+      "interruptible_frames": [
+        5
+      ],
+      "frames": [
+        {
+          "file": "transitions/hover_to_idle/000.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/hover_to_idle/001.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/hover_to_idle/002.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/hover_to_idle/003.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/hover_to_idle/004.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/hover_to_idle/005.webp",
+          "duration_ms": 60
+        }
+      ]
+    },
+    "idle_to_loading": {
+      "loop": false,
+      "interruptible_frames": [
+        5
+      ],
+      "frames": [
+        {
+          "file": "transitions/idle_to_loading/000.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_loading/001.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_loading/002.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_loading/003.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_loading/004.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/idle_to_loading/005.webp",
+          "duration_ms": 60
+        }
+      ]
+    },
+    "loading_to_working": {
+      "loop": false,
+      "interruptible_frames": [
+        5
+      ],
+      "frames": [
+        {
+          "file": "transitions/loading_to_working/000.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/loading_to_working/001.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/loading_to_working/002.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/loading_to_working/003.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/loading_to_working/004.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/loading_to_working/005.webp",
+          "duration_ms": 60
+        }
+      ]
+    },
+    "working_to_idle": {
+      "loop": false,
+      "interruptible_frames": [
+        5
+      ],
+      "frames": [
+        {
+          "file": "transitions/working_to_idle/000.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/working_to_idle/001.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/working_to_idle/002.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/working_to_idle/003.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/working_to_idle/004.webp",
+          "duration_ms": 60
+        },
+        {
+          "file": "transitions/working_to_idle/005.webp",
+          "duration_ms": 60
+        }
+      ]
+    }
+  }
+}

@@ -17,6 +17,14 @@
 
 四个主状态固定为 `idle`、`hover`、`loading`、`working`。额外过渡动画可沿用 `idle_to_hover` 等命名，但不影响主状态校验。
 
+过渡动画使用 `<source>_to_<target>` 命名，`loop` 必须为 `false`。播放器在状态发生变化时优先查找对应过渡；存在时先完整播放一次，再进入目标状态循环；不存在时直接进入目标状态。M3 的标准过渡集合为：
+
+- `idle_to_hover`
+- `hover_to_idle`
+- `idle_to_loading`
+- `loading_to_working`
+- `working_to_idle`
+
 ## 动画与帧
 
 每个动画包含：
