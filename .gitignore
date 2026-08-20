@@ -11,3 +11,7 @@ wheels/
 
 # Local creation projects may contain private user photos
 workspace/
+
+# Local milestone sample assets (generated images, animations, and metadata)
+/assets/pets/m2_sample/
+/assets/pets/m3_sample/
