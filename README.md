@@ -1,6 +1,6 @@
 # DesktopPet
 
-一个基于 PySide6 的透明桌面宠物原型。当前已完成 M1“规范与原型”、M2“单角色闭环”和 M3“完整动作集”：支持照片制作流程，以及 Idle、Hover、Loading、Working 和五段状态过渡动画。
+一个基于 PySide6 的透明桌面宠物原型。当前已完成 M1“规范与原型”、M2“单角色闭环”、M3“完整动作集”，并实现 M4“自动打包与质检”：支持照片制作流程、完整状态动画，以及新角色资源的清理、质检、打包和一键导入。
 
 ## 运行
 
@@ -50,6 +50,7 @@ uv run python -m unittest discover -s tests -v
 uv run python main.py --validate
 uv run python main.py --smoke-test
 uv run python main.py --smoke-create
+uv run pet-assets check assets\pets\m3_sample\manifest.json
 ```
 
-资源协议见 [docs/resource_manifest_spec.md](docs/resource_manifest_spec.md)，M2 审阅指引见 [docs/m2_review.md](docs/m2_review.md)。
+M4 打包、导入及审阅步骤见 [docs/m4_asset_pipeline.md](docs/m4_asset_pipeline.md)。资源协议见 [docs/resource_manifest_spec.md](docs/resource_manifest_spec.md)，M2 审阅指引见 [docs/m2_review.md](docs/m2_review.md)。

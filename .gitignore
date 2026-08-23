@@ -15,3 +15,9 @@ workspace/
 # Local milestone sample assets (generated images, animations, and metadata)
 /assets/pets/m2_sample/
 /assets/pets/m3_sample/
+/assets/pets/local/
+
+# Local M4 review reports and distributable pet packages
+/workspace/m4_review/
+*.petpack
+quality_report.json
