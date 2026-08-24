@@ -154,7 +154,10 @@ class M5ExperienceTests(unittest.TestCase):
 
             report = json.loads(report_path.read_text(encoding="utf-8"))
             self.assertTrue(report["passed"])
-            self.assertEqual(report["preloaded_frame_count"], 82)
+            self.assertEqual(
+                report["preloaded_frame_count"],
+                sum(len(item.frames) for item in self.manifest.animations.values()),
+            )
             self.assertLessEqual(report["state_response_max_ms"], 150)
             self.assertGreaterEqual(len(report["samples"]), 2)
             self.assertGreater(process_rss_bytes(), 0)

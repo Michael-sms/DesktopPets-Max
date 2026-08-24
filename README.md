@@ -1,6 +1,6 @@
 # DesktopPet
 
-一个基于 PySide6 的透明桌面宠物。当前已完成 M1～M5：支持照片制作流程、完整状态动画、资源打包导入，以及透明热区交互、多屏位置恢复、损坏资源回退和长时间运行验收。
+一个基于 PySide6 的透明桌面宠物。当前已完成 M1～M6：支持照片制作流程、真实姿势变化的透明逐帧动画、资源打包导入，以及透明热区交互、多屏位置恢复、损坏资源回退和长时间运行验收。
 
 ## 运行
 
@@ -19,7 +19,7 @@ uv run python main.py
 - 角色外透明区域在 Windows 上点击穿透；窗口位置和置顶设置会在重启后恢复。
 - 使用 `uv run python main.py --debug` 显示状态标签和完整验收菜单。
 
-M3 默认角色会按 `Idle → Hover → Idle → Loading → Working → Idle` 轮播，以展示全部五段标准过渡。详细审阅步骤见 [docs/m3_review.md](docs/m3_review.md)。
+M6 默认角色会按 `Idle → Hover → Idle → Loading → Working → Idle` 轮播，以展示真实挥手、光球升降、双手终端操作和五段标准过渡；Idle 还会随机环顾。详细步骤见 [docs/m6_dynamic_animation.md](docs/m6_dynamic_animation.md)。
 
 ## M2 角色制作审阅
 
@@ -56,4 +56,4 @@ uv run pet-assets check assets\pets\m3_sample\manifest.json
 uv run python main.py --soak-test --soak-seconds 60
 ```
 
-M5 最终审核步骤见 [docs/m5_final_acceptance.md](docs/m5_final_acceptance.md)，M4 打包与导入见 [docs/m4_asset_pipeline.md](docs/m4_asset_pipeline.md)。资源协议见 [docs/resource_manifest_spec.md](docs/resource_manifest_spec.md)。
+M6 动画审核见 [docs/m6_dynamic_animation.md](docs/m6_dynamic_animation.md)，M5 最终体验审核见 [docs/m5_final_acceptance.md](docs/m5_final_acceptance.md)，M4 打包与导入见 [docs/m4_asset_pipeline.md](docs/m4_asset_pipeline.md)。资源协议见 [docs/resource_manifest_spec.md](docs/resource_manifest_spec.md)。

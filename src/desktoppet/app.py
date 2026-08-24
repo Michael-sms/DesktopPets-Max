@@ -7,6 +7,7 @@ import ctypes
 import ctypes.wintypes
 import math
 import os
+import random
 import sys
 from dataclasses import replace
 from pathlib import Path
@@ -32,7 +33,7 @@ from .state_machine import PetEvent, PetState, PetStateMachine
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MANIFEST = PROJECT_ROOT / "assets" / "pets" / "m3_sample" / "manifest.json"
+DEFAULT_MANIFEST = PROJECT_ROOT / "assets" / "pets" / "m6_sample" / "manifest.json"
 
 STATE_LABELS = {
     PetState.IDLE: "静置",
@@ -61,6 +62,9 @@ class PetWindow(QWidget):
         self.machine = PetStateMachine()
         self.machine.subscribe(self._on_state_changed)
         self._pixmaps = self._load_pixmaps()
+        self._idle_variants = tuple(
+            name for name in manifest.animations if name.startswith("idle_variant_")
+        )
         self._active_animation_name = PetState.IDLE.value
         self._transition_target: PetState | None = None
         self._frame_index = 0
@@ -83,6 +87,10 @@ class PetWindow(QWidget):
         self._animation_timer.setTimerType(Qt.TimerType.PreciseTimer)
         self._animation_timer.timeout.connect(self._tick)
         self._schedule_frame()
+        self._idle_variant_timer = QTimer(self)
+        self._idle_variant_timer.setSingleShot(True)
+        self._idle_variant_timer.timeout.connect(self._play_idle_variant)
+        self._schedule_idle_variant()
 
         if demo:
             self._demo_states = iter(
@@ -186,6 +194,7 @@ class PetWindow(QWidget):
         self.update()
 
     def _on_state_changed(self, previous: PetState, current: PetState) -> None:
+        self._idle_variant_timer.stop()
         transition = f"{previous.value}_to_{current.value}"
         if transition in self.manifest.animations:
             self._active_animation_name = transition
@@ -197,6 +206,8 @@ class PetWindow(QWidget):
         self._frame_elapsed_ms = 0
         self._phase = 0.0
         self._schedule_frame()
+        if current is PetState.IDLE and self._transition_target is None:
+            self._schedule_idle_variant()
         self.update()
 
     def _finish_transition(self) -> None:
@@ -205,6 +216,20 @@ class PetWindow(QWidget):
         self._transition_target = None
         self._frame_index = 0
         self._frame_elapsed_ms = 0
+        if target is PetState.IDLE:
+            self._schedule_idle_variant()
+
+    def _schedule_idle_variant(self) -> None:
+        if self._idle_variants and self.machine.state is PetState.IDLE:
+            self._idle_variant_timer.start(random.randint(8_000, 20_000))
+
+    def _play_idle_variant(self) -> None:
+        if (
+            self._idle_variants
+            and self.machine.state is PetState.IDLE
+            and self._active_animation_name == PetState.IDLE.value
+        ):
+            self._preview_animation(random.choice(self._idle_variants))
 
     def _advance_demo(self) -> None:
         try:
@@ -415,12 +440,14 @@ class PetWindow(QWidget):
             action.triggered.connect(lambda checked=False, value=state: self.machine.force(value))
             state_menu.addAction(action)
         transition_menu = menu.addMenu("过渡预览")
+        idle_menu = menu.addMenu("随机 Idle 动作")
         for name, animation in self.manifest.animations.items():
             if animation.loop:
                 continue
-            action = QAction(name, transition_menu)
+            parent_menu = idle_menu if name.startswith("idle_variant_") else transition_menu
+            action = QAction(name, parent_menu)
             action.triggered.connect(lambda checked=False, value=name: self._preview_animation(value))
-            transition_menu.addAction(action)
+            parent_menu.addAction(action)
         event_menu = menu.addMenu("任务结束事件")
         for label, event in (
             ("完成", PetEvent.FINISHED),
