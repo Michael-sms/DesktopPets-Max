@@ -21,6 +21,7 @@ class PetEvent(str, Enum):
     FINISHED = "finished"
     CANCELLED = "cancelled"
     FAILED = "failed"
+    TIMED_OUT = "timed_out"
 
 
 StateListener = Callable[[PetState, PetState], None]
@@ -55,7 +56,12 @@ class PetStateMachine:
             self._activity = PetState.LOADING
         elif event is PetEvent.WORK_STARTED:
             self._activity = PetState.WORKING
-        elif event in {PetEvent.FINISHED, PetEvent.CANCELLED, PetEvent.FAILED}:
+        elif event in {
+            PetEvent.FINISHED,
+            PetEvent.CANCELLED,
+            PetEvent.FAILED,
+            PetEvent.TIMED_OUT,
+        }:
             self._activity = None
 
         target = self._activity or (

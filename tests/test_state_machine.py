@@ -37,6 +37,13 @@ class PetStateMachineTests(unittest.TestCase):
 
         self.assertEqual(changes, [(PetState.IDLE, PetState.LOADING)])
 
+    def test_failure_cancel_and_timeout_all_leave_busy_state(self) -> None:
+        for event in (PetEvent.FAILED, PetEvent.CANCELLED, PetEvent.TIMED_OUT):
+            with self.subTest(event=event):
+                machine = PetStateMachine()
+                machine.dispatch(PetEvent.WORK_STARTED)
+                self.assertEqual(machine.dispatch(event), PetState.IDLE)
+
 
 if __name__ == "__main__":
     unittest.main()

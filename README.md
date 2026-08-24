@@ -1,6 +1,6 @@
 # DesktopPet
 
-一个基于 PySide6 的透明桌面宠物原型。当前已完成 M1“规范与原型”、M2“单角色闭环”、M3“完整动作集”，并实现 M4“自动打包与质检”：支持照片制作流程、完整状态动画，以及新角色资源的清理、质检、打包和一键导入。
+一个基于 PySide6 的透明桌面宠物。当前已完成 M1～M5：支持照片制作流程、完整状态动画、资源打包导入，以及透明热区交互、多屏位置恢复、损坏资源回退和长时间运行验收。
 
 ## 运行
 
@@ -16,6 +16,8 @@ uv run python main.py
 - 右键打开状态调试菜单或退出。
 - 按住角色左键拖动。
 - 使用 `uv run python main.py --demo` 自动轮播四状态。
+- 角色外透明区域在 Windows 上点击穿透；窗口位置和置顶设置会在重启后恢复。
+- 使用 `uv run python main.py --debug` 显示状态标签和完整验收菜单。
 
 M3 默认角色会按 `Idle → Hover → Idle → Loading → Working → Idle` 轮播，以展示全部五段标准过渡。详细审阅步骤见 [docs/m3_review.md](docs/m3_review.md)。
 
@@ -51,6 +53,7 @@ uv run python main.py --validate
 uv run python main.py --smoke-test
 uv run python main.py --smoke-create
 uv run pet-assets check assets\pets\m3_sample\manifest.json
+uv run python main.py --soak-test --soak-seconds 60
 ```
 
-M4 打包、导入及审阅步骤见 [docs/m4_asset_pipeline.md](docs/m4_asset_pipeline.md)。资源协议见 [docs/resource_manifest_spec.md](docs/resource_manifest_spec.md)，M2 审阅指引见 [docs/m2_review.md](docs/m2_review.md)。
+M5 最终审核步骤见 [docs/m5_final_acceptance.md](docs/m5_final_acceptance.md)，M4 打包与导入见 [docs/m4_asset_pipeline.md](docs/m4_asset_pipeline.md)。资源协议见 [docs/resource_manifest_spec.md](docs/resource_manifest_spec.md)。

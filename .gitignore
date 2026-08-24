@@ -21,3 +21,8 @@ workspace/
 /workspace/m4_review/
 *.petpack
 quality_report.json
+
+# Local M5 settings, performance samples, and long-running reports
+/workspace/m5_reports/
+desktop_pet_settings.json
+*.m5-report.json
