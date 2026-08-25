@@ -25,8 +25,9 @@ from PySide6.QtGui import (
     QScreen,
     QShowEvent,
 )
-from PySide6.QtWidgets import QApplication, QMenu, QWidget
+from PySide6.QtWidgets import QApplication, QInputDialog, QMenu, QWidget
 
+from .focus_timer import ReliableTimer, TimerStatus
 from .manifest import ManifestError, PetManifest, load_manifest
 from .settings import SettingsStore, relative_position, restored_position
 from .state_machine import PetEvent, PetState, PetStateMachine
@@ -52,12 +53,19 @@ class PetWindow(QWidget):
         demo: bool = False,
         debug: bool = False,
         settings: SettingsStore | None = None,
+        focus_timer: ReliableTimer | None = None,
     ) -> None:
         super().__init__()
         self.manifest = manifest
         self._settings_store = settings or SettingsStore.default()
         self._preferences = self._settings_store.load()
         self._debug_badge = debug or self._preferences.debug_badge
+        timer_path = (
+            self._settings_store.path.with_name("focus_timer.json")
+            if self._settings_store.path is not None
+            else None
+        )
+        self.focus_timer = focus_timer or ReliableTimer(timer_path)
         self._screen_signal_connected = False
         self.machine = PetStateMachine()
         self.machine.subscribe(self._on_state_changed)
@@ -91,6 +99,10 @@ class PetWindow(QWidget):
         self._idle_variant_timer.setSingleShot(True)
         self._idle_variant_timer.timeout.connect(self._play_idle_variant)
         self._schedule_idle_variant()
+        self._focus_timer_tick = QTimer(self)
+        self._focus_timer_tick.setInterval(250)
+        self._focus_timer_tick.timeout.connect(self._refresh_focus_timer)
+        self._focus_timer_tick.start()
 
         if demo:
             self._demo_states = iter(
@@ -113,6 +125,10 @@ class PetWindow(QWidget):
     @property
     def render_interval_ms(self) -> int:
         return RENDER_INTERVAL_MS
+
+    @property
+    def timer_display_text(self) -> str:
+        return self.focus_timer.display_text()
 
     def _load_pixmaps(self) -> dict[str, tuple[QPixmap, ...]]:
         result: dict[str, tuple[QPixmap, ...]] = {}
@@ -280,9 +296,23 @@ class PetWindow(QWidget):
                 image_rect.translate(math.sin(self._phase * 2) * 1.2, 0)
         painter.drawPixmap(image_rect.toRect(), pixmap)
 
+        timer_text = self.timer_display_text
+        if timer_text:
+            badge = QRectF(42, 10, self.width() - 84, 32)
+            painter.setPen(Qt.PenStyle.NoPen)
+            colour = QColor(25, 119, 190, 225)
+            if self.focus_timer.status is TimerStatus.PAUSED:
+                colour = QColor(126, 93, 32, 225)
+            elif self.focus_timer.status is TimerStatus.FINISHED:
+                colour = QColor(31, 143, 88, 235)
+            painter.setBrush(colour)
+            painter.drawRoundedRect(badge, 16, 16)
+            painter.setPen(QColor("white"))
+            painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, timer_text)
+
         if self._debug_badge:
             label = STATE_LABELS[state]
-            badge = QRectF(12, 10, 72, 28)
+            badge = QRectF(12, 48 if timer_text else 10, 72, 28)
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(22, 25, 38, 205))
             painter.drawRoundedRect(badge, 14, 14)
@@ -432,6 +462,34 @@ class PetWindow(QWidget):
 
     def _show_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
+        timer_menu = menu.addMenu("计时器")
+        status_text = self.timer_display_text or "尚未开始"
+        status_action = QAction(status_text, timer_menu)
+        status_action.setEnabled(False)
+        timer_menu.addAction(status_action)
+        timer_menu.addSeparator()
+        start_action = QAction("开始 25 分钟专注", timer_menu)
+        start_action.triggered.connect(
+            lambda checked=False: self._start_focus_timer(25)
+        )
+        timer_menu.addAction(start_action)
+        custom_action = QAction("自定义时长…", timer_menu)
+        custom_action.triggered.connect(self._start_custom_focus_timer)
+        timer_menu.addAction(custom_action)
+        timer_menu.addSeparator()
+        pause_action = QAction("暂停", timer_menu)
+        pause_action.setEnabled(self.focus_timer.status is TimerStatus.RUNNING)
+        pause_action.triggered.connect(self._pause_focus_timer)
+        timer_menu.addAction(pause_action)
+        resume_action = QAction("继续", timer_menu)
+        resume_action.setEnabled(self.focus_timer.status is TimerStatus.PAUSED)
+        resume_action.triggered.connect(self._resume_focus_timer)
+        timer_menu.addAction(resume_action)
+        stop_action = QAction("停止并清除", timer_menu)
+        stop_action.setEnabled(self.focus_timer.status is not TimerStatus.IDLE)
+        stop_action.triggered.connect(self._stop_focus_timer)
+        timer_menu.addAction(stop_action)
+        menu.addSeparator()
         state_menu = menu.addMenu("状态")
         for state in PetState:
             action = QAction(STATE_LABELS[state], state_menu)
@@ -474,6 +532,40 @@ class PetWindow(QWidget):
         quit_action.triggered.connect(QApplication.instance().quit)
         menu.addAction(quit_action)
         menu.exec(position)
+
+    def _start_focus_timer(self, minutes: int) -> None:
+        self.focus_timer.start(minutes * 60, label="专注")
+        self.update()
+
+    def _start_custom_focus_timer(self) -> None:
+        minutes, accepted = QInputDialog.getInt(
+            self,
+            "自定义专注时长",
+            "分钟数：",
+            25,
+            1,
+            480,
+            1,
+        )
+        if accepted:
+            self._start_focus_timer(minutes)
+
+    def _pause_focus_timer(self) -> None:
+        self.focus_timer.pause()
+        self.update()
+
+    def _resume_focus_timer(self) -> None:
+        self.focus_timer.resume()
+        self.update()
+
+    def _stop_focus_timer(self) -> None:
+        self.focus_timer.stop()
+        self.update()
+
+    def _refresh_focus_timer(self) -> None:
+        self.focus_timer.refresh()
+        if self.focus_timer.status is not TimerStatus.IDLE:
+            self.update()
 
     def _toggle_debug_badge(self, enabled: bool) -> None:
         self._debug_badge = enabled

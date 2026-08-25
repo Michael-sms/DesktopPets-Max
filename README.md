@@ -19,6 +19,10 @@ uv run python main.py
 - 角色外透明区域在 Windows 上点击穿透；窗口位置和置顶设置会在重启后恢复。
 - 使用 `uv run python main.py --debug` 显示状态标签和完整验收菜单。
 
+### 显式专注计时
+
+右键桌宠并打开“计时器”，可以直接开始 25 分钟专注，或选择“自定义时长…”输入 1～480 分钟。计时期间桌宠顶部会持续显示剩余时间；同一菜单可暂停、继续或停止计时。计时以真实截止时间计算并保存在本地，因此界面卡顿、系统休眠或程序重启不会通过漏掉刷新次数而延长倒计时。
+
 M6 默认角色会按 `Idle → Hover → Idle → Loading → Working → Idle` 轮播，以展示真实挥手、光球升降、双手终端操作和五段标准过渡；Idle 还会随机环顾。详细步骤见 [docs/m6_dynamic_animation.md](docs/m6_dynamic_animation.md)。
 
 ## M2 角色制作审阅

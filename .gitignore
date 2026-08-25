@@ -27,3 +27,8 @@ quality_report.json
 /workspace/m5_reports/
 desktop_pet_settings.json
 *.m5-report.json
+
+# Local M7 timer runtime state and acceptance reports
+focus_timer.json
+*.focus-timer.json
+*.m7-report.json
