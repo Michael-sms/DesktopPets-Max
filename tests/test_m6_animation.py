@@ -4,10 +4,11 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PIL import Image, ImageChops, ImageStat
+from PIL import Image, ImageChops, ImageDraw, ImageStat
 from PySide6.QtWidgets import QApplication
 
 from desktoppet.app import PetWindow
+from desktoppet.frame_animation import _remove_connected_background
 from desktoppet.manifest import load_manifest
 
 
@@ -52,6 +53,30 @@ class M6AnimationTests(unittest.TestCase):
             difference = ImageChops.difference(first, changed)
             mean = sum(ImageStat.Stat(difference).mean) / 4
             self.assertGreater(mean, 3.0, state)
+
+    def test_faux_checkerboard_touching_character_is_removed(self) -> None:
+        image = Image.new("RGBA", (128, 128), (0, 0, 0, 255))
+        draw = ImageDraw.Draw(image)
+        tile = 12
+        for y in range(0, 128, tile):
+            for x in range(0, 128, tile):
+                shade = 244 if (x // tile + y // tile) % 2 else 254
+                draw.rectangle((x, y, x + tile - 1, y + tile - 1), fill=(shade,) * 3 + (255,))
+        draw.line((0, 60, 127, 60), fill=(220, 220, 220, 255), width=1)
+        draw.line((64, 0, 64, 127), fill=(220, 220, 220, 255), width=1)
+        # Coloured body and legs deliberately touch a broad white shoe highlight.
+        draw.rounded_rectangle((38, 20, 90, 92), radius=12, fill=(32, 91, 214, 255))
+        draw.rectangle((43, 82, 55, 116), fill=(24, 43, 89, 255))
+        draw.rectangle((73, 82, 85, 116), fill=(24, 43, 89, 255))
+        draw.rectangle((34, 108, 55, 119), fill=(250, 250, 250, 255))
+
+        cleaned = _remove_connected_background(image)
+
+        self.assertEqual(cleaned.getpixel((64, 110))[3], 0)
+        self.assertEqual(cleaned.getpixel((8, 8))[3], 0)
+        self.assertEqual(cleaned.getpixel((20, 60))[3], 0)
+        self.assertEqual(cleaned.getpixel((64, 12))[3], 0)
+        self.assertEqual(cleaned.getpixel((45, 112))[3], 255)
 
     def test_all_frames_are_transparent_and_grounded(self) -> None:
         for name, animation in self.manifest.animations.items():

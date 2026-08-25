@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from collections import Counter
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -163,13 +164,157 @@ def _remove_connected_background(image: Image.Image) -> Image.Image:
     image = image.convert("RGBA")
     if image.getchannel("A").getextrema()[0] < 255:
         return image
+    _remove_bright_checkerboard(image)
     for point in (
         (0, 0),
         (image.width - 1, 0),
     ):
         ImageDraw.floodfill(image, point, (0, 0, 0, 0), thresh=38)
+    _remove_straight_background_guides(image)
     _remove_background_islands(image)
     return image
+
+
+def _remove_bright_checkerboard(image: Image.Image) -> None:
+    """Erase generated faux-transparency even when it touches the character.
+
+    Image generators sometimes paint a light checkerboard instead of emitting an
+    alpha channel.  Flood fill alone cannot remove a checker cell that is joined
+    to a shoe or prop.  Large locally neutral areas are safe to erase here; small
+    white highlights remain because their neighbourhood contains coloured line
+    art rather than more checker pixels.
+    """
+
+    pixels = image.load()
+    width, height = image.size
+    border = (
+        [pixels[x, 0][:3] for x in range(width)]
+        + [pixels[x, height - 1][:3] for x in range(width)]
+        + [pixels[0, y][:3] for y in range(height)]
+        + [pixels[width - 1, y][:3] for y in range(height)]
+    )
+    palette = [
+        colour
+        for colour, count in Counter(border).most_common(32)
+        if count >= 8
+        and min(colour) >= 232
+        and max(colour) - min(colour) <= 10
+    ]
+    if not palette:
+        return
+    candidate = bytearray(width * height)
+    for y in range(height):
+        offset = y * width
+        for x in range(width):
+            red, green, blue, alpha = pixels[x, y]
+            candidate[offset + x] = int(
+                alpha > 0
+                and any(
+                    max(abs(red - pr), abs(green - pg), abs(blue - pb)) <= 2
+                    for pr, pg, pb in palette
+                )
+            )
+
+    # Summed-area table keeps the neighbourhood test linear in pixel count.
+    stride = width + 1
+    integral = [0] * ((height + 1) * stride)
+    for y in range(height):
+        row_sum = 0
+        source_offset = y * width
+        target_offset = (y + 1) * stride
+        previous_offset = y * stride
+        for x in range(width):
+            row_sum += candidate[source_offset + x]
+            integral[target_offset + x + 1] = integral[previous_offset + x + 1] + row_sum
+
+    radius = 6
+    to_clear: list[tuple[int, int]] = []
+    for y in range(height):
+        y0, y1 = max(0, y - radius), min(height, y + radius + 1)
+        for x in range(width):
+            if not candidate[y * width + x]:
+                continue
+            x0, x1 = max(0, x - radius), min(width, x + radius + 1)
+            neutral_count = (
+                integral[y1 * stride + x1]
+                - integral[y0 * stride + x1]
+                - integral[y1 * stride + x0]
+                + integral[y0 * stride + x0]
+            )
+            area = (x1 - x0) * (y1 - y0)
+            if neutral_count / area >= 0.82:
+                to_clear.append((x, y))
+    for x, y in to_clear:
+        pixels[x, y] = (0, 0, 0, 0)
+
+
+def _remove_straight_background_guides(image: Image.Image) -> None:
+    """Remove thin neutral grid/guideline strokes painted into generated sheets."""
+
+    pixels = image.load()
+    width, height = image.size
+
+    def neutral(x: int, y: int) -> bool:
+        red, green, blue, alpha = pixels[x, y]
+        return (
+            alpha > 0
+            and min(red, green, blue) >= 195
+            and max(red, green, blue) - min(red, green, blue) <= 24
+        )
+
+    marked: set[tuple[int, int]] = set()
+    minimum_run = max(18, min(width, height) // 28)
+    for y in range(height):
+        start = None
+        for x in range(width + 1):
+            if x < width and neutral(x, y):
+                start = x if start is None else start
+            elif start is not None:
+                if x - start >= minimum_run:
+                    for run_x in range(start, x):
+                        thickness = sum(
+                            neutral(run_x, near_y)
+                            for near_y in range(max(0, y - 4), min(height, y + 5))
+                        )
+                        if thickness <= 3:
+                            marked.add((run_x, y))
+                start = None
+    for x in range(width):
+        start = None
+        for y in range(height + 1):
+            if y < height and neutral(x, y):
+                start = y if start is None else start
+            elif start is not None:
+                if y - start >= minimum_run:
+                    for run_y in range(start, y):
+                        thickness = sum(
+                            neutral(near_x, run_y)
+                            for near_x in range(max(0, x - 4), min(width, x + 5))
+                        )
+                        if thickness <= 3:
+                            marked.add((x, run_y))
+                start = None
+
+    # Preserve white costume/highlight pixels close to coloured line art. Grid
+    # strokes extend through otherwise empty space and have no such neighbours.
+    safe_to_clear: list[tuple[int, int]] = []
+    for x, y in marked:
+        near_coloured_subject = False
+        for near_y in range(max(0, y - 4), min(height, y + 5)):
+            for near_x in range(max(0, x - 4), min(width, x + 5)):
+                red, green, blue, alpha = pixels[near_x, near_y]
+                if alpha and (
+                    min(red, green, blue) < 195
+                    or max(red, green, blue) - min(red, green, blue) > 24
+                ):
+                    near_coloured_subject = True
+                    break
+            if near_coloured_subject:
+                break
+        if not near_coloured_subject:
+            safe_to_clear.append((x, y))
+    for x, y in safe_to_clear:
+        pixels[x, y] = (0, 0, 0, 0)
 
 
 def _remove_background_islands(image: Image.Image) -> None:
